@@ -92,7 +92,7 @@ void loop() {
   // Detect arm curl motion
   if (currentAngle >= thresholdAngle && !motionDetected) {
     motionDetected = true;  // First event detected (arm going up)
-  } else if (currentAngle <= thresholdAngle - 0.7 && motionDetected) {
+  } else if (currentAngle <= thresholdAngle - MovementRange && motionDetected) {
     // Second event detected (arm going down)
     reps++;  // Increase the arm curl repetitions count
     light();
