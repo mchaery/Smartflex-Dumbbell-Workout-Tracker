@@ -5,6 +5,7 @@
 
 #include <Wire.h>
 #include <MPU6050_tockn.h>
+#include <math.h>  // For atan2, sqrt, PI
 
 MPU6050 mpu6050(Wire);
 
@@ -38,20 +39,20 @@ void setup() {
   // Set threshold angle based on the selected range
   switch (selectedRange) {
     case 1:
-      thresholdAngle = 0.6;
-      MovementRange = 0.5;
+      thresholdAngle = 30.0;
+      MovementRange = 15.0;
       break;
     case 2:
-      thresholdAngle = 0.7;
-      MovementRange = 0.6;
+      thresholdAngle = 50.0;
+      MovementRange = 15.0;
       break;
     case 3:
-      thresholdAngle = 0.8;
-      MovementRange = 0.7;
+      thresholdAngle = 70.0;
+      MovementRange = 15.0;
       break;
     default:
-      thresholdAngle = 0.8; // Default to 70~90 degrees
-      MovementRange = 0.7;
+      thresholdAngle = 70.0; // Default to 70~90 degrees
+      MovementRange = 15.0;
   }
 
   // Get user input for goal reps and sets
@@ -80,7 +81,12 @@ void light() {
 void loop() {
   // Read accelerometer and gyroscope values from the sensor
   mpu6050.update();
-  float currentAngle = mpu6050.getAccX();
+  float accX = mpu6050.getAccX();
+  float accY = mpu6050.getAccY();
+  float accZ = mpu6050.getAccZ();
+
+  // Calculate pitch angle using accelerometer values (in degrees)
+  float pitch = atan2(-accX, sqrt(accY * accY + accZ * accZ)) * 180.0 / PI;
 
   // Wait for goal sets input if not received yet
   while (goalSets == 0) {
@@ -89,10 +95,10 @@ void loop() {
     goalSets = Serial.parseInt();
   }
 
-  // Detect arm curl motion
-  if (currentAngle >= thresholdAngle && !motionDetected) {
+  // Detect arm curl motion based on pitch angle
+  if (pitch >= thresholdAngle && !motionDetected) {
     motionDetected = true;  // First event detected (arm going up)
-  } else if (currentAngle <= thresholdAngle - MovementRange && motionDetected) {
+  } else if (pitch <= thresholdAngle - MovementRange && motionDetected) {
     // Second event detected (arm going down)
     reps++;  // Increase the arm curl repetitions count
     light();
